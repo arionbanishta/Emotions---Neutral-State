@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Emotion Wheel</title>
+  <meta name="description" content="Name how you feel, then find your way back to 0.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./"><span class="brand-mark" aria-hidden="true"></span>Emotion Wheel</a>
+    <div class="gender" role="radiogroup" aria-label="Content version">
+      <button type="button" role="radio" data-gender="f" aria-checked="false" title="Female version">F</button>
+      <button type="button" role="radio" data-gender="m" aria-checked="true" title="Male version">M</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="card wheel-card" aria-labelledby="wheel-title">
+      <div class="wheel-head">
+        <h1 id="wheel-title">How are you feeling?</h1>
+        <div class="wheel-actions">
+          <div class="search">
+            <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+            <input id="search" type="search" placeholder="Search emotions" autocomplete="off" spellcheck="false"
+                   role="combobox" aria-label="Search emotions" aria-expanded="false" aria-controls="search-results" aria-autocomplete="list">
+            <ul id="search-results" class="search-results" role="listbox" hidden></ul>
+          </div>
+          <button type="button" class="btn-soft" id="analyze">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l1.6 4.9 4.9 1.6-4.9 1.6L12 16.5l-1.6-4.9L5.5 10l4.9-1.6z"/><path d="M18.5 15.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg>
+            Analyze my situation
+          </button>
+        </div>
+      </div>
+
+      <div class="stage">
+        <svg id="wheel" role="group" aria-label="Emotion wheel"></svg>
+      </div>
+
+      <p class="tip"><strong>Tip:</strong> start broad, then explore more specific feelings.</p>
+    </section>
+
+    <aside class="side" id="side">
+      <section class="card about" aria-live="polite">
+        <p class="eyebrow">About this emotion</p>
+        <div class="emotion-title">
+          <span class="face" id="face"></span>
+          <h2 id="emotion-name">Happy</h2>
+        </div>
+        <nav class="crumbs" id="crumbs" aria-label="Emotion family" hidden></nav>
+        <p class="desc" id="emotion-desc"></p>
+
+        <div class="divider"></div>
+
+        <h3>Audio support</h3>
+        <p class="sub">Choose background audio to support your mood.</p>
+        <div class="audio-options" role="radiogroup" aria-label="Background audio">
+          <button type="button" class="audio-opt" role="radio" aria-checked="false" data-audio="nature">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16l5.5-6.5 3.5 4 2.5-2.5L21 16"/></svg>
+            <span>Nature sound</span>
+          </button>
+          <button type="button" class="audio-opt" role="radio" aria-checked="false" data-audio="brown">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6.5"/></svg>
+            <span>Brown noise</span>
+          </button>
+          <button type="button" class="audio-opt" role="radio" aria-checked="true" data-audio="silence">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg>
+            <span>Silence</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="card insight">
+        <div class="card-head">
+          <h3>Insight</h3>
+          <span class="from" id="insight-from" hidden></span>
+        </div>
+        <blockquote id="insight-quote" hidden>
+          <p><span class="mark" aria-hidden="true">&ldquo;</span><span id="quote-text"></span></p>
+          <cite id="quote-author"></cite>
+        </blockquote>
+        <p class="empty" id="insight-empty" hidden></p>
+
+        <p class="label">Formula</p>
+        <div class="formula" id="formula"></div>
+      </section>
+
+      <section class="card regulate">
+        <div class="card-head">
+          <h3>Regulate / learn more</h3>
+          <span class="from" id="video-from" hidden></span>
+        </div>
+        <p class="sub" id="regulate-text"></p>
+        <div class="video" id="video"></div>
+      </section>
+    </aside>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/wheel.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
