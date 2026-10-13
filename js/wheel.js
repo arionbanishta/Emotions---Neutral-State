@@ -5,6 +5,7 @@
   const NS = 'http://www.w3.org/2000/svg';
   const VIEW = 680;                    // viewBox size
   const RADII = [0, 120, 212, 334];    // core | middle ring | outer ring
+  const SELECTED_SCALE = 1.13;
 
   /* ---------- colour helpers ---------- */
   const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
@@ -79,7 +80,7 @@
 
     model.list.forEach(n => {
       const path = n.parent ? `${n.parent.name}, ${n.name}` : n.name;
-      const g = el('g', { class: `seg d${n.depth}`, tabindex: '0', role: 'button', 'aria-label': path, 'data-id': n.id });
+      const g = el('g', { class: `seg d${n.depth}`, tabindex: '0', role: 'button', 'aria-label': path, 'aria-pressed': 'false', 'data-id': n.id });
       const p = el('path', { d: arc(RADII[n.depth], RADII[n.depth + 1], n.a0, n.a1), fill: n.fill });
       const m = mid(n), [x, y] = pt(labelRadius(n), m);
       const t = el('text', {
@@ -100,33 +101,46 @@
     svg.append(base, top);
 
     let current = null;
+
+    // Moves a segment between layers without losing keyboard focus.
+    function move(g, layer) {
+      const hadFocus = document.activeElement === g;
+      layer.append(g);
+      if (hadFocus) g.focus({ preventScroll: true });
+    }
+
+    function clear() {
+      if (!current) return;
+      const c = parts[current.id];
+      c.p.setAttribute('fill', current.fill);
+      c.t.style.fill = '';
+      c.g.style.transform = '';
+      c.g.classList.remove('is-selected');
+      c.g.setAttribute('aria-pressed', 'false');
+      move(c.g, base);
+      current = null;
+    }
+
     function select(id) {
       const n = model.byId[id];
       if (!n) return;
-      if (current) {
-        const c = parts[current.id];
-        c.p.setAttribute('fill', current.fill);
-        c.t.style.fill = '';
-        c.g.style.transform = '';
-        c.g.classList.remove('is-selected');
-        c.g.removeAttribute('aria-pressed');
-        base.append(c.g);
-      }
+      clear();
       const s = parts[id];
-      const hadFocus = document.activeElement === s.g;
-      top.append(s.g);                              // draw on top of its neighbours
-      if (hadFocus) s.g.focus({ preventScroll: true });
+      move(s.g, top);                               // draw on top of its neighbours
       s.p.setAttribute('fill', n.pale);
       s.t.style.fill = n.ink;
       s.g.classList.add('is-selected');
       s.g.setAttribute('aria-pressed', 'true');
-      s.g.getBoundingClientRect();                  // let the lift animate after re-insert
-      const [dx, dy] = pt(n.depth === 0 ? 8 : 6, mid(n));
-      s.g.style.transform = `translate(${dx}px, ${dy}px)`;
+      s.g.getBoundingClientRect();                  // let the pop animate after re-insert
+      // Grow ~13% around the segment's own centre and lift it slightly outward.
+      const [cx, cy] = pt(labelRadius(n), mid(n));
+      const [dx, dy] = pt(5, mid(n));
+      s.g.style.transform =
+        `translate(${dx}px, ${dy}px) translate(${cx}px, ${cy}px) scale(${SELECTED_SCALE}) translate(${-cx}px, ${-cy}px)`;
       current = n;
     }
 
-    return { select };
+    return { select, clear };
   }
 
   window.Wheel = { buildModel, render, mix };

@@ -18,7 +18,8 @@
   };
 
   /* ---------- wheel ---------- */
-  const view = Wheel.render($('#wheel'), model, select);
+  // Clicking the selected emotion again returns to the neutral state.
+  const view = Wheel.render($('#wheel'), model, id => (state.id === id ? clear() : select(id)));
 
   function select(id) {
     if (!model.byId[id] || state.id === id) return;
@@ -26,7 +27,22 @@
     view.select(id);
     renderPanel();
     syncAudio();
-    try { history.replaceState(null, '', '#' + id); } catch (e) { /* file:// in some browsers */ }
+    setHash(id);
+  }
+
+  // Neutral state: nothing selected, no sound, empty side panel.
+  function clear() {
+    if (!state.id) return;
+    state.id = null;
+    view.clear();
+    setAudio('silence');
+    renderPanel();
+    setHash('');
+  }
+
+  function setHash(id) {
+    try { history.replaceState(null, '', id ? '#' + id : location.pathname + location.search); }
+    catch (e) { /* file:// in some browsers */ }
   }
 
   /* ---------- content lookup ---------- */
@@ -68,6 +84,11 @@
   function renderPanel() {
     const n = model.byId[state.id];
     const side = $('#side');
+    side.hidden = !n;
+    if (!n) { renderVideo(null); return; }        // also stops a playing video
+    side.classList.remove('is-entering');
+    void side.offsetWidth;                        // restart the fade-in
+    side.classList.add('is-entering');
     side.style.setProperty('--accent', n.fill);
     side.style.setProperty('--accent-soft', Wheel.mix(n.base, '#ffffff', 0.9));
     side.style.setProperty('--accent-ink', n.ink);
@@ -162,19 +183,21 @@
   /* ---------- audio ---------- */
   function syncAudio() {
     let opts = {};
-    if (state.audio === 'nature') {
+    if (state.audio === 'nature' && state.id) {
       const a = resolve(model.byId[state.id], 'audio').value || {};
       opts = { src: a.src || null, music: !!a.music };
     }
     Soundscape.play(state.audio, opts);
   }
 
+  function setAudio(mode) {
+    state.audio = mode;
+    document.querySelectorAll('.audio-opt').forEach(b => b.setAttribute('aria-checked', String(b.dataset.audio === mode)));
+    syncAudio();
+  }
+
   document.querySelectorAll('.audio-opt').forEach(btn => {
-    btn.addEventListener('click', () => {
-      state.audio = btn.dataset.audio;
-      document.querySelectorAll('.audio-opt').forEach(b => b.setAttribute('aria-checked', String(b === btn)));
-      syncAudio();
-    });
+    btn.addEventListener('click', () => setAudio(btn.dataset.audio));
   });
 
   /* ---------- F / M version ---------- */
@@ -275,8 +298,18 @@
   });
 
   /* ---------- start ---------- */
+  // Opens in the neutral state unless the link points at an emotion.
+  function fromHash() {
+    const id = decodeURIComponent(location.hash.slice(1));
+    if (model.byId[id]) select(id); else clear();
+  }
   renderGender();
-  const fromHash = decodeURIComponent(location.hash.slice(1));
-  select(model.byId[fromHash] ? fromHash : 'happy');
-  window.addEventListener('hashchange', () => select(decodeURIComponent(location.hash.slice(1))));
+  renderPanel();
+  fromHash();
+  window.addEventListener('hashchange', fromHash);
+
+  // Escape anywhere (outside the search box) returns to neutral.
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && e.target !== input) clear();
+  });
 })();
